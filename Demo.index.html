@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#cbd9e1" />
+    <meta name="description" content="Review drafting and rating portal for sharing a recent experience." />
+    <link rel="preload" as="image" href="images/misty-drive-bg.jpg" fetchpriority="high" />
+    <title>Share Your Review</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #102f49; background: #c8d7df; font-synthesis: none; text-rendering: optimizeLegibility;
+      }
+      * { box-sizing: border-box; }
+      html { min-width: 320px; min-height: 100%; background: #c8d7df; }
+      body { min-width: 320px; min-height: 100%; margin: 0; }
+      button, textarea { font: inherit; }
+      button { -webkit-tap-highlight-color: transparent; }
+
+      .portal-shell {
+        position: relative; isolation: isolate; width: 100%; min-height: 100svh; overflow: hidden;
+        background-image: url("images/misty-drive-bg.jpg"); background-position: center 45%; background-size: cover;
+      }
+      .portal-tint {
+        position: absolute; z-index: -1; inset: 0;
+        background:
+          linear-gradient(180deg, rgba(228,239,247,0.62) 0%, rgba(212,224,231,0.42) 40%, rgba(133,154,164,0.18) 100%),
+          rgba(201, 214, 221, 0.14);
+      }
+      .top-glimpse {
+        position: absolute; top: -29px; left: max(18px, calc(50% - 180px)); right: max(18px, calc(50% - 180px));
+        height: 35px; border: 1px solid rgba(255,255,255,0.58); border-radius: 0 0 17px 17px;
+        background: rgba(245,250,253,0.32); box-shadow: inset 0 -1px 0 rgba(255,255,255,0.35); backdrop-filter: blur(11px);
+      }
+      .page-content { position: relative; z-index: 1; width: min(100%, 397px); margin: 0 auto; padding: 37px 18px 51px; }
+
+      .reveal {
+        opacity: 0;
+        animation:
+          section-reveal 0.55s cubic-bezier(0.22,1,0.36,1) forwards,
+          gentle-float var(--float-speed, 5.8s) ease-in-out var(--float-delay, 0.65s) infinite;
+        will-change: transform;
+      }
+      .intro-reveal  { --reveal-y: -10px; --float-speed: 6.2s; --float-delay: 0.65s; }
+      .review-reveal { --reveal-y: 18px;  --float-speed: 5.4s; --float-delay: 0.78s; animation-delay: 0.1s, var(--float-delay); }
+      .steps-reveal  { --reveal-y: 14px;  --float-speed: 6.6s; --float-delay: 0.9s;  animation-delay: 0.22s, var(--float-delay); }
+      @keyframes section-reveal { from { opacity: 0; transform: translateY(var(--reveal-y,12px)); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes gentle-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+      .intro-panel {
+        min-height: 197px; padding: 9px 12px 11px; border: 1px solid rgba(255,255,255,0.38);
+        border-radius: 26px 26px 20px 20px;
+        background: linear-gradient(145deg, rgba(250,252,254,0.53), rgba(241,245,248,0.37));
+        box-shadow: 0 18px 34px rgba(25,51,67,0.18), 0 5px 11px rgba(33,66,84,0.12), inset 0 1px 0 rgba(255,255,255,0.64);
+        backdrop-filter: blur(14px) saturate(88%);
+      }
+      .step-kicker {
+        display: inline-flex; height: 26px; align-items: center; gap: 7px; padding: 0 13px 0 11px;
+        border: 1px solid rgba(255,255,255,0.94); border-radius: 999px; color: #2e6fa8;
+        background: rgba(249,251,253,0.78); box-shadow: 0 4px 12px rgba(67,95,111,0.07);
+        font-size: 8px; font-weight: 800; letter-spacing: 1.45px; text-transform: uppercase;
+      }
+      .step-kicker span { width: 5px; height: 5px; border-radius: 50%; background: #3b8de2; }
+      .intro-panel h1 {
+        margin: 12px 0 10px; color: #102c44; font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(31px, 9.4vw, 36px); font-weight: 400; letter-spacing: -1.45px; line-height: 0.98;
+      }
+      .intro-panel h1 em { color: #2d82df; font-style: normal; }
+      .intro-panel p { margin: 0; color: #55718a; font-size: 12.2px; line-height: 1.48; }
+
+      .review-panel {
+        position: relative; min-height: 338px; margin-top: 20px; padding: 17px 16px 15px;
+        border: 1px solid rgba(255,255,255,0.76); border-radius: 25px; color: #15344d; background: rgba(255,255,255,0.94);
+        box-shadow: 0 24px 40px rgba(20,47,63,0.23), 0 7px 14px rgba(15,42,59,0.14), inset 0 1px 0 #fff;
+      }
+      .score-badge {
+        position: absolute; z-index: 3; top: -9px; right: -7px; display: grid; width: 39px; height: 39px; place-items: center;
+        border: 2px solid #f7fbfd; border-radius: 12px 12px 13px 13px; color: #2473b5; background: #e7f5fb;
+        box-shadow: 0 3px 7px rgba(35,76,98,0.18); font-family: Georgia, "Times New Roman", serif;
+        font-size: 17px; font-style: italic; font-weight: 700;
+      }
+      .score-pop { animation: score-pop 0.36s cubic-bezier(0.2,1.45,0.45,1) both; }
+      @keyframes score-pop { from { transform: rotate(-8deg) scale(0.75); } to { transform: rotate(4deg) scale(1); } }
+      .rating-row { display: flex; height: 17px; align-items: center; gap: 10px; }
+      .rating-row h2 { margin: 0; color: #173650; font-size: 11px; font-weight: 800; letter-spacing: -0.1px; }
+      .stars { display: flex; align-items: center; gap: 0; }
+      .stars button {
+        display: grid; width: 16px; height: 18px; padding: 0; border: 0; place-items: center;
+        color: #f6a000; background: transparent; cursor: pointer; transition: transform 120ms ease;
+      }
+      .stars button:hover { transform: translateY(-1px) scale(1.08); }
+      .stars button:active { transform: scale(0.86); }
+      .stars svg { width: 14px; height: 14px; stroke-width: 1.8; }
+      .edit-note { margin: 2px 0 9px; color: #31495b; font-size: 9px; line-height: 1.4; }
+      .review-field {
+        position: relative; height: 119px; overflow: hidden; border-radius: 11px;
+        background: linear-gradient(90deg, #f0f6fa 0%, #edf3f7 100%); box-shadow: inset 0 1px 4px rgba(47,79,97,0.08);
+      }
+      .quote-mark { position: absolute; z-index: 2; top: 3px; left: 14px; color: #4da0df; font-family: Georgia, serif; font-size: 27px; font-weight: 700; line-height: 1; }
+      .review-field textarea {
+        width: 100%; height: 100%; resize: none; overflow-y: scroll; border: 0; outline: none;
+        padding: 37px 23px 12px 15px; color: #18232c; background: transparent;
+        font-family: Arial, Helvetica, sans-serif; font-size: 14.2px; line-height: 1.58;
+        scrollbar-color: #8a8d8f transparent; scrollbar-width: thin;
+      }
+      .review-field textarea::-webkit-scrollbar { width: 13px; }
+      .review-field textarea::-webkit-scrollbar-track { background: transparent; }
+      .review-field textarea::-webkit-scrollbar-thumb { border: 4px solid transparent; border-radius: 999px; background: #85888a; background-clip: padding-box; }
+      .word-count {
+        position: absolute; right: 15px; bottom: 5px; padding: 2px 7px; border-radius: 999px; color: #4f5c65;
+        background: rgba(255,255,255,0.96); box-shadow: 0 1px 3px rgba(30,54,67,0.08); font-size: 7.5px; line-height: 1.3; pointer-events: none;
+      }
+      .review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 17px; }
+      .review-actions button {
+        display: inline-flex; height: 40px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px;
+        font-family: Georgia, "Times New Roman", serif; font-size: 14px; cursor: pointer;
+        transition: transform 120ms ease, background-color 180ms ease;
+      }
+      .review-actions button:active { transform: scale(0.97); }
+      .review-actions svg { width: 14px; height: 14px; stroke-width: 1.7; }
+      .rewrite-button { border: 1px solid #c5d9e8; color: #24425a; background: #fff; box-shadow: 0 4px 8px rgba(50,83,102,0.16); }
+      .copy-button { border: 1px solid #277fde; color: white; background: linear-gradient(180deg, #378fea, #287cdc); box-shadow: 0 6px 10px rgba(39,118,201,0.25); }
+      .copy-button.is-copied { border-color: #2187aa; background: #248bad; }
+      .soft-divider { width: calc(100% - 10px); height: 1px; margin: 11px auto 10px; background: linear-gradient(90deg, transparent, #d9e4eb 12%, #d9e4eb 88%, transparent); }
+      .submit-button {
+        display: flex; width: 100%; height: 41px; align-items: center; justify-content: center; gap: 11px; border: 0;
+        border-radius: 11px; color: #fff; background: #0e304b; box-shadow: 0 8px 13px rgba(15,47,72,0.22);
+        font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 120ms ease, background-color 180ms ease;
+      }
+      .submit-button:hover { transform: translateY(-1px); }
+      .submit-button:active { transform: scale(0.985); }
+      .submit-button.is-submitted { background: #174f67; }
+      .submit-button svg { width: 14px; height: 14px; stroke-width: 1.8; }
+      .redirect-note { margin: 7px 0 0; color: #647481; text-align: center; font-family: Georgia, "Times New Roman", serif; font-size: 8px; line-height: 1.25; }
+
+      .steps-panel {
+        min-height: 86px; margin-top: 12px; padding: 9px 15px 8px; border: 1px solid rgba(255,255,255,0.59);
+        border-radius: 16px; color: #102d44; background: rgba(238,244,247,0.42);
+        box-shadow: 0 18px 32px rgba(19,46,61,0.21), 0 5px 11px rgba(28,57,73,0.14), inset 0 1px 0 rgba(255,255,255,0.58);
+        backdrop-filter: blur(12px) saturate(85%);
+      }
+      .steps-panel h2 { margin: 0 0 5px; text-align: center; font-size: 7px; font-weight: 800; letter-spacing: 1.1px; text-transform: uppercase; }
+      .steps-list { display: grid; grid-template-columns: 56px 1fr 89px 1fr 56px; align-items: start; }
+      .step-item { display: flex; min-width: 0; align-items: center; flex-direction: column; color: #102d44; font-family: Georgia, "Times New Roman", serif; font-size: 7px; font-weight: 700; white-space: nowrap; }
+      .step-icon { position: relative; display: grid; width: 31px; height: 31px; margin-bottom: 5px; place-items: center; border-radius: 50%; background: rgba(253,254,255,0.91); box-shadow: 0 2px 6px rgba(29,61,79,0.12); }
+      .step-icon svg { width: 14px; height: 14px; stroke-width: 1.3; }
+      .step-icon b { position: absolute; top: -3px; right: -2px; display: grid; width: 14px; height: 14px; place-items: center; border-radius: 50%; color: white; background: #0f314d; font-family: Arial, sans-serif; font-size: 6px; }
+      .connector { width: 100%; margin-top: 15px; border-top: 1px dashed rgba(45,81,104,0.62); }
+
+      @media (min-width: 600px) {
+        .portal-shell { background-position: center; }
+        .page-content { width: 397px; }
+        .intro-panel h1 { font-size: 36px; }
+      }
+      @media (max-width: 350px) {
+        .page-content { padding-inline: 13px; }
+        .intro-panel h1 { font-size: 30px; }
+        .intro-panel p { font-size: 11.6px; }
+        .wide-copy { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important; transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="portal-shell">
+      <div class="portal-tint"></div>
+      <div class="top-glimpse" aria-hidden="true"></div>
+
+      <div class="page-content">
+        <section class="intro-panel reveal intro-reveal" aria-labelledby="page-title">
+          <div class="step-kicker"><span></span> One last little step</div>
+          <h1 id="page-title">Thanks for sharing<br />the <em>good stuff.</em></h1>
+          <p>
+            We&rsquo;ve drafted a review based on your experience.
+            <br class="wide-copy" /> Make it yours, copy it, and share the love-it only
+            <br class="wide-copy" /> takes a moment.
+          </p>
+        </section>
+
+        <section class="review-panel reveal review-reveal" aria-labelledby="review-heading">
+          <div class="score-badge score-pop" id="scoreBadge" aria-label="5.0 out of 5 stars">5.0</div>
+
+          <div class="rating-row">
+            <h2 id="review-heading">Your review</h2>
+            <div class="stars" id="stars" aria-label="Choose a 4 or 5 star rating"></div>
+          </div>
+          <p class="edit-note">Feel free to edit it before you copy.</p>
+
+          <div class="review-field">
+            <span class="quote-mark" aria-hidden="true">&ldquo;</span>
+            <textarea id="reviewText" aria-label="Your review text" spellcheck="true"></textarea>
+            <span class="word-count" id="wordCount">0 words</span>
+          </div>
+
+          <div class="review-actions">
+            <button type="button" class="rewrite-button" id="rewriteBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5" /><path d="M18.3 16A8 8 0 1 1 19 9l1 3" /></svg>
+              Rewrite
+            </button>
+            <button type="button" class="copy-button" id="copyBtn">
+              <span class="copy-icon"></span>
+              <span class="copy-label">Copy review</span>
+            </button>
+          </div>
+
+          <div class="soft-divider"></div>
+
+          <button type="button" class="submit-button" id="submitBtn">
+            <span class="submit-label">Submit rating</span>
+            <span class="submit-icon"></span>
+          </button>
+          <p class="redirect-note" id="redirectNote" role="status" aria-live="polite">
+            You'll be redirected to the rating portal to post your review.
+          </p>
+        </section>
+
+        <section class="steps-panel reveal steps-reveal" aria-labelledby="steps-title">
+          <h2 id="steps-title">Share in 3 quick steps</h2>
+          <div class="steps-list">
+            <div class="step-item">
+              <span class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+                <b>1</b>
+              </span>
+              <span>Copy it</span>
+            </div>
+            <span class="connector" aria-hidden="true"></span>
+            <div class="step-item">
+              <span class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4.5V3h6v1.5M9 10h6m-6 4h6" /></svg>
+                <b>2</b>
+              </span>
+              <span>Paste on review page</span>
+            </div>
+            <span class="connector" aria-hidden="true"></span>
+            <div class="step-item">
+              <span class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5m0-5-9 9" /><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+                <b>3</b>
+              </span>
+              <span>Post it</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var reviewParts = {
+          5: {
+            openings: [
+              "I had a genuinely lovely experience{place} from start to finish.",
+              "My experience{place} was excellent from the moment I arrived.",
+              "Everything about my visit{place} felt welcoming and well handled.",
+              "I came away really impressed by my experience{place}.",
+              "This was such a positive and enjoyable experience{place}.",
+              "I had a wonderful time{place} and felt looked after throughout.",
+              "My visit{place} was smooth, friendly, and genuinely enjoyable.",
+              "I couldn't have asked for a better experience{place}."
+            ],
+            service: [
+              "The team was warm, attentive, and made the whole process feel effortless.",
+              "Everyone I spoke with was friendly, thoughtful, and genuinely helpful.",
+              "The service felt personal without ever being rushed or overdone.",
+              "The team paid attention to the little details and made me feel welcome.",
+              "Everything was handled with care, professionalism, and a friendly attitude.",
+              "The people there were kind, knowledgeable, and happy to help.",
+              "I really appreciated how easy and comfortable they made everything feel.",
+              "There was a genuine level of care that stood out right away."
+            ],
+            details: [
+              "It is clear that they care about giving people a great experience.",
+              "The quality and attention to detail really stood out to me.",
+              "I left feeling valued, and that is not something you find everywhere.",
+              "Nothing felt forced; it was simply thoughtful service done very well.",
+              "The entire visit felt relaxed, organized, and easy from beginning to end.",
+              "They created the kind of experience that makes you want to return.",
+              "The atmosphere was pleasant and the service was consistently excellent.",
+              "You can tell there is real pride behind what they do."
+            ],
+            closings: [
+              "I would happily recommend them.",
+              "I will definitely be coming back.",
+              "Highly recommended based on my experience.",
+              "I am very glad I chose to visit.",
+              "I would not hesitate to return.",
+              "A well-deserved five stars from me.",
+              "I would gladly recommend this place to others.",
+              "Thank you for making the experience so enjoyable."
+            ]
+          },
+          4: {
+            openings: [
+              "I had a very good experience{place} overall.",
+              "My visit{place} was positive from start to finish.",
+              "I really enjoyed my experience{place}.",
+              "Everything went smoothly during my visit{place}.",
+              "I came away happy with the experience{place}.",
+              "My time{place} was comfortable and enjoyable.",
+              "I had a positive experience{place} and felt well looked after.",
+              "This was a really good visit{place} overall."
+            ],
+            service: [
+              "The team was friendly, helpful, and easy to deal with.",
+              "Everyone was welcoming and took the time to help when needed.",
+              "The service was attentive and the whole process felt straightforward.",
+              "The staff handled everything professionally and with a friendly attitude.",
+              "I appreciated the helpful service and relaxed atmosphere.",
+              "The team was approachable, polite, and clearly cared about the experience.",
+              "Everything was handled efficiently without feeling rushed.",
+              "The people there made the visit feel easy and comfortable."
+            ],
+            details: [
+              "The quality was strong and the little details were handled well.",
+              "I appreciated the care and consistency throughout the visit.",
+              "The experience felt organized, pleasant, and reliable.",
+              "There was a lot to like, especially the helpful and personal service.",
+              "I left feeling satisfied and pleased that I had chosen them.",
+              "The overall experience was thoughtful and well put together.",
+              "They made a good impression and delivered a quality experience.",
+              "It was clear that the team takes pride in doing things properly."
+            ],
+            closings: [
+              "I would be happy to visit again.",
+              "I would comfortably recommend them to others.",
+              "A strong experience and well worth four stars.",
+              "I am glad I gave this place a try.",
+              "I would definitely consider returning.",
+              "Overall, I would happily recommend this place.",
+              "I look forward to visiting again in the future.",
+              "Thanks to the team for a very positive experience."
+            ]
+          }
+        };
+
+        function composeReview(rating, businessName, sequence) {
+          var p = reviewParts[rating];
+          var place = businessName ? " at " + businessName : "";
+          var o = p.openings.length, s = p.service.length, d = p.details.length;
+          var oi = sequence % o;
+          var si = Math.floor(sequence / o) % s;
+          var di = Math.floor(sequence / (o * s)) % d;
+          var ci = Math.floor(sequence / (o * s * d)) % p.closings.length;
+          return [
+            p.openings[oi].replace("{place}", place),
+            p.service[si], p.details[di], p.closings[ci]
+          ].join(" ");
+        }
+
+        function createSeed() {
+          if (window.crypto && window.crypto.getRandomValues) {
+            var v = new Uint32Array(1); window.crypto.getRandomValues(v); return v[0] % 4096;
+          }
+          return Math.floor(Math.random() * 4096);
+        }
+
+        function getPortalConfig() {
+          var params = new URLSearchParams(window.location.search);
+          var businessName = (params.get("business") || params.get("store") || "").trim().slice(0, 60);
+          var placeId = params.get("placeId") || params.get("googlePlaceId");
+          var configuredUrl = params.get("reviewUrl") || params.get("ratingUrl");
+          if (placeId) {
+            return { businessName: businessName, reviewUrl: "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(placeId) };
+          }
+          if (configuredUrl) {
+            try {
+              var dest = new URL(configuredUrl, window.location.origin);
+              if (dest.protocol === "http:" || dest.protocol === "https:") return { businessName: businessName, reviewUrl: dest.href };
+            } catch (e) {}
+          }
+          return { businessName: businessName, reviewUrl: "https://www.google.com/maps" };
+        }
+
+        function copyToClipboard(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).catch(fallbackCopy);
+          }
+          return Promise.resolve(fallbackCopy());
+          function fallbackCopy() {
+            var ta = document.createElement("textarea");
+            ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand("copy"); } catch (e) {}
+            ta.remove();
+          }
+        }
+
+        var config = getPortalConfig();
+        var seed = createSeed();
+        var counts = { 4: seed + 1, 5: seed + 1 };
+        var rating = 5;
+
+        var textEl = document.getElementById("reviewText");
+        var wordEl = document.getElementById("wordCount");
+        var badgeEl = document.getElementById("scoreBadge");
+        var starsEl = document.getElementById("stars");
+        var copyBtn = document.getElementById("copyBtn");
+        var rewriteBtn = document.getElementById("rewriteBtn");
+        var submitBtn = document.getElementById("submitBtn");
+        var noteEl = document.getElementById("redirectNote");
+
+        var starSvg = function (filled) {
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<polygon points="12 2.7 14.8 8.4 21 9.3 16.5 13.7 17.6 20 12 17 6.4 20 7.5 13.7 3 9.3 9.2 8.4" fill="' + (filled ? "currentColor" : "none") + '"/></svg>';
+        };
+        var copyIcon = function (done) {
+          return done
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5m-6 9 2 2 4-4"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
+        };
+        var arrowIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>';
+
+        function renderStars() {
+          var html = "";
+          for (var i = 1; i <= 5; i++) {
+            var label = i < 4 ? i + " stars selects the 4 star minimum" : "Rate " + i + " stars";
+            html += '<button type="button" data-star="' + i + '" aria-label="' + label + '">' + starSvg(i <= rating) + "</button>";
+          }
+          starsEl.innerHTML = html;
+        }
+
+        function updateWordCount() {
+          var words = textEl.value.trim().split(/\s+/).filter(Boolean).length;
+          wordEl.textContent = words + " words";
+        }
+
+        function setReview(text) { textEl.value = text; updateWordCount(); resetCopied(); }
+
+        function generateReview(r) { var seq = counts[r]++; setReview(composeReview(r, config.businessName, seq)); }
+
+        function resetCopied() {
+          copyBtn.classList.remove("is-copied");
+          copyBtn.querySelector(".copy-icon").innerHTML = copyIcon(false);
+          copyBtn.querySelector(".copy-label").textContent = "Copy review";
+        }
+        function setCopied() {
+          copyBtn.classList.add("is-copied");
+          copyBtn.querySelector(".copy-icon").innerHTML = copyIcon(true);
+          copyBtn.querySelector(".copy-label").textContent = "Copied";
+        }
+
+        function setRating(selectedStar) {
+          var next = selectedStar === 5 ? 5 : 4;
+          if (next === rating) return;
+          rating = next;
+          badgeEl.textContent = rating.toFixed(1);
+          badgeEl.setAttribute("aria-label", rating.toFixed(1) + " out of 5 stars");
+          badgeEl.classList.remove("score-pop"); void badgeEl.offsetWidth; badgeEl.classList.add("score-pop");
+          renderStars(); generateReview(rating);
+        }
+
+        starsEl.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-star]");
+          if (btn) setRating(parseInt(btn.getAttribute("data-star"), 10));
+        });
+        textEl.addEventListener("input", function () { updateWordCount(); resetCopied(); });
+        rewriteBtn.addEventListener("click", function () { generateReview(rating); });
+        copyBtn.addEventListener("click", function () {
+          copyToClipboard(textEl.value).then(function () { setCopied(); setTimeout(resetCopied, 1800); });
+        });
+        submitBtn.addEventListener("click", function () {
+          copyToClipboard(textEl.value).then(function () {
+            setCopied();
+            submitBtn.classList.add("is-submitted");
+            submitBtn.querySelector(".submit-label").textContent = "Ready to post";
+            submitBtn.querySelector(".submit-icon").innerHTML = copyIcon(true);
+            noteEl.textContent = "Review copied. Opening the rating portal...";
+            setTimeout(function () { window.location.assign(config.reviewUrl); }, 450);
+          });
+        });
+
+        renderStars();
+        badgeEl.textContent = rating.toFixed(1);
+        copyBtn.querySelector(".copy-icon").innerHTML = copyIcon(false);
+        submitBtn.querySelector(".submit-icon").innerHTML = arrowIcon;
+        setReview(composeReview(rating, config.businessName, seed));
+      })();
+    </script>
+  </body>
+</html>
