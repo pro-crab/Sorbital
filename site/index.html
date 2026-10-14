@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorbital</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --card: #121a2d;
+        --accent: #7c9cff;
+        --accent-2: #6ee7b7;
+        --text: #edf2ff;
+        --muted: #b5c0d9;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, var(--bg), #111827 55%, #0f172a);
+        color: var(--text);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+
+      .container {
+        width: min(820px, 90vw);
+        background: rgba(18, 26, 45, 0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+        padding: 48px 32px;
+      }
+
+      .badge {
+        display: inline-block;
+        background: rgba(124, 156, 255, 0.12);
+        color: var(--accent-2);
+        border: 1px solid rgba(110, 231, 183, 0.25);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        line-height: 1.05;
+      }
+
+      p {
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        margin: 0 0 24px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(110, 231, 183, 0.09);
+        border: 1px solid rgba(110, 231, 183, 0.2);
+        padding: 12px 14px;
+        border-radius: 12px;
+        color: #dffcf1;
+        font-weight: 600;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 16px rgba(110, 231, 183, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="badge">Vercel deployment ready</div>
+      <h1>Sorbital</h1>
+      <p>
+        This page is deployed from the <strong>site/</strong> folder and is ready for Vercel.
+        If you want this to become your actual landing page, replace the content in this file.
+      </p>
+      <div class="status">
+        <span class="dot"></span>
+        Site is live and serving successfully
+      </div>
+    </main>
+  </body>
+</html>
